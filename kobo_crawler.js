@@ -1,16 +1,14 @@
-const fs = require('fs');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const dayjs = require('dayjs');
 const md5 = require('md5');
 
 const fetchArticles = async function () {
-    let host = 'https://tw.news.kobo.com';
-    let url = host + '/%E5%B0%88%E9%A1%8C%E4%BC%81%E5%8A%83/%E5%A5%BD%E8%AE%80%E6%9B%B8%E5%96%AE';
-    // let {data: html} = await axios.get(url);
+    console.log('fetch articles list');
 
-    let html = fs.readFileSync(__dirname + '/list.html', {encoding: 'utf8'});
-    // console.log(html);
+    let host = 'https://tw.news.kobo.com';
+    let url = host + '/專題企劃/好讀書單';
+    let {data: html} = await axios.get(encodeURI(url));
 
     const $ = cheerio.load(html);
     return $('.blog-item:has(.blog-item-text-title:contains("一週99"))').map((i, el) => {
@@ -22,8 +20,9 @@ const fetchArticles = async function () {
 }
 
 const findBooksInArticle = async function (url) {
-    // let {data: html} = await axios.get(url);
-    let html = fs.readFileSync(__dirname + '/article.html', {encoding: 'utf8'});
+    console.log('find books in: ' + url)
+
+    let {data: html} = await axios.get(encodeURI(url));
     const $ = cheerio.load(html);
     const books = [];
 
@@ -40,7 +39,7 @@ const findBooksInArticle = async function (url) {
 
         books.push({
             id: id,
-            date: date.toISOString(),
+            date: date.format('YYYY-MM-DD'),
             title: stripBrackets($link.text()),
             description: formatsDescription($, bookLink, url),
         });
@@ -54,9 +53,7 @@ const fetchBooks = async function () {
     let url = articles.length ? articles[0].link : null;
     if (!url) return [];
 
-    // console.log(articles);
-    let books = findBooksInArticle(url);
-    console.log(books);
+    return findBooksInArticle(url);
 };
 
 module.exports = {
@@ -91,7 +88,7 @@ function formatsDescription($, bookLink, blogUrl) {
     // box
     $(`div.simplebox-content:has(a[href="${bookLink}"]) p`).map((i, p) => {
         let desc = $(p).contents().filter((i, el) => el.nodeType === 3).text();
-        $(p).contents().map((i, child) => {
+        $(p).children().map((i, child) => {
             let $child = $(child);
             switch ($child.prop('tagName')) {
                 case 'A': desc += `<a href="${ $child.attr('href') }">${ $child.text() }</a>`; break;
@@ -101,7 +98,7 @@ function formatsDescription($, bookLink, blogUrl) {
         descs.push('<div>' + desc + '</div>');
     });
 
-    descs.push(`<div>來源<a href="${blogUrl}">${blogUrl}</a></div>`);
+    descs.push(`<div>來源：<a href="${blogUrl}">${blogUrl}</a></div>`);
 
     return descs.join('');
 }
