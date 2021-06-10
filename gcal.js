@@ -43,7 +43,10 @@ const createBookEvent = async function (book) {
         summary: book.title,
         description: book.description,
         start: {date: book.date, timeZone: 'Asia/Taipei'},
-        end: {date: book.date, timeZone: 'Asia/Taipei'},
+        end: {
+            date: dayjs(book.date, 'YYYY-MM-DD').add(1, 'day').format('YYYY-MM-DD'),
+            timeZone: 'Asia/Taipei'
+        },
         extendedProperties: {
             shared: {
                 id: book.id
