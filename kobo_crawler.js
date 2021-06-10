@@ -39,7 +39,7 @@ const findBooksInArticle = async function (url) {
 
         books.push({
             id: id,
-            date: date.format('YYYY-MM-DD'),
+            date: date,
             title: stripBrackets($link.text()),
             description: formatsDescription($, bookLink, url),
         });

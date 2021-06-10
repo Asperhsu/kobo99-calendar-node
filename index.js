@@ -10,7 +10,7 @@ exports.handler = async function(event, context) {
     }
 
     let dates = books.map(book => book.date).sort((a, b) => {
-        return new Date(b.date) - new Date(a.date);
+        return b.unix() - a.unix();
     });
     let events = await GCal.listEvents(dates.shift(), dates.pop());
 
